@@ -1,0 +1,176 @@
+Google Cloud Platform - Core Infrastructure
+
+Mapping of AWS terms to GCP:
+https://cloud.google.com/docs/compare/aws/
+
+Compute Services:
+Compute Engine - IaaS - like AWS EC2
+App Engine - PaaS - like AWS Elastic Beanstalk
+Kubernetes Engine - container environment - like AWS ECS
+Cloud Functions - serverless - like AWS Lambda
+Managed Services (Cloud Launcher) - Google and 3rd party predefined architectures providing various services
+
+Infrastructure:
+Google own all of their physical infrastructure and are the only users of it. This means they can optimise the network specifically to make Google services perform well. - 100,000s of miles of fiber cable, 8 subsea cables
+
+GCP is organised into regions and zones very much like AWS:
+High level Regions - Asia, US, EU
+Low level Regions - eu-west-1
+Zones - eu-west-1a
+
+Disaster Recovery:
+In the event of a disaster Google claim to be able to move VMs to another Region/Zone with no down time or restarting of your app
+
+Pricing:
+Billing in sub-hour increments (like all cloud providers)
+Discounts for sustained use - don't have to turn resources off to save money. Discounts applied to VMs running for more than 25% of the month
+Custom VM instance types to tailor CPU, memory to try and get the best price (though at a base level this is more expensive)
+
+Software:
+A lot of Google's resources are open source so do not have to be used on the GCP. This makes it more vendor-agnostic than other providers. E.g. Kubernetes
+
+Account management:
+Organisation - A company account with many Projects.
+Folders - Collections of projects organised perhaps by department. Allows permissions to be granted across many projects.
+Projects - with unique billing, permissions etc.
+Google has a GUI and an SDK of course.
+They also have the Cloud Shell which is an in-browser shell session with the Google CLI available as well as a few Gigs of storage backing it. It also comes with a GUI file browser if that's easier for people to manage files/directories.
+
+IAM:
+No users/groups exist by default - They are managed outside of GCP
+Can have accounts both for users based on existing Google accounts or apps to grant permissions etc. Like AWS.
+Permissions are inherited at each level from the Organisation down and cannot be revoked at a lower level.
+
+VPC networks:
+Google VPCs are global, subnets are regional
+The default VPC already has networks set up in all Regions/Zones that are able to talk to each other
+Custom VPCs can be created to isolate resources if required
+The network configuration has the usual features and is much like AWS
+Firewall rules can be created within a VPC and tagged so they can be applied to VMs using the tag. Many tags can be applied along with a priority.
+
+Compute Engine:
+A large range of different CPU/memory specs are available like AWS
+Managed Instance Group - Groups of of VMs can be created fronted by a load balancer (AWS ASG)
+
+Cloud storage:
+Binary large-object (blob) storage organised around "buckets" e.g. AWS S3
+Data encryption at rest and in transit by default
+Nearline and Coldline storage options provide similar services to AWS Glacier for archiving data
+Supports transferring data from AWS S3
+
+Cloud Bigtable:
+Column database based on HBase API
+
+Cloud SQL:
+Provides MySQL or PostgreSQL as a managed service
+
+Cloud Spanner:
+Globally-scalable SQL achieved by leveraging the speed of Google's network
+https://cloud.google.com/spanner/
+https://ai.google/research/pubs/pub45855
+
+Containers:
+Compute Engine supports container optimisation and can install a Docker image directly from the Container Registry service
+Kubernetes - a container cluster orchestration system for deploying images and the VMs they run on.
+
+App Engine:
+Fully managed application deployment similar to AWS ElasticBeanstalk
+Defined using YAML
+Supports blue/green deployments
+
+Deployment Manager:
+Equivalent of CloudFormation written in YAML
+
+Monitoring:
+Built in monitoring with Stackdriver BUT...
+Out of the box only supports 7 day retention of log files. Anything longer, monitoring metrics, alerting integrations etc will require a premium subscription with Stackdriver and the integration of plugins.
+
+Cloud Pub/Sub:
+Equivalent of AWS SQS/SNS
+
+Basic VM Networking Example:
+
+Getting Started with Compute Engine
+Overview
+In this lab, you will create virtual machines (VMs) and connect to them. You will also create connections between the instances.
+
+Create a virtual machine using the GCP Console:
+On the Products & Services () menu, click Compute Engine > VM instances.
+Click Create.
+On the Create an Instance page, for Name, type my-vm-1
+For Zone, select the zone that Qwiklabs or your instructor assigned you to.
+For Machine type, accept the default.
+For Boot disk, if the Image shown is not Debian GNU/Linux 9 (stretch), click Change and select Debian GNU/Linux 9 (stretch).
+Leave the defaults for Identity and API access unmodified.
+For Firewall, click Allow HTTP traffic.
+Leave all other defaults unmodified.
+To create and launch the VM, click Create. The VM can take about two minutes to launch and be fully available for use.
+
+Create a virtual machine using the gcloud command line:
+On the Google Cloud Platform menu, click Activate Google Cloud Shell . If a dialog box appears, click Start Cloud Shell.
+To display a list of all the zones in the region to which Qwiklabs assigned you, enter this partial command
+gcloud compute zones list | grep
+
+followed by the region that Qwiklabs or your instructor assigned you to.
+
+Your completed command will look like this:
+
+gcloud compute zones list | grep europe-west1
+
+Choose a zone from that list other than the zone to which Qwiklabs assigned you. For example, if Qwiklabs assigned you to region europe-west1 and zone europe-west1-c, you might choose zone europe-west1-b.
+To set your default zone to the one you just chose, enter this partial command
+gcloud config set compute/zone
+followed by the zone you chose.
+
+Your completed command will look like this:
+
+gcloud config set compute/zone europe-west1-b
+
+To create a VM instance called my-vm-2 in that zone, execute this command:
+gcloud compute instances create "my-vm-2" \
+--machine-type "n1-standard-1" \
+--image-project "debian-cloud" \
+--image "debian-9-stretch-v20170918" \
+--subnet "default"
+The VM can take about two minutes to launch and be fully available for use.
+
+To close the Cloud Shell, execute the following command:
+exit
+
+Connect between VM instances:
+On the Products & Services () menu, click Compute Engine > VM instances. You will see the two VM instances you created, each in a different zone.
+Notice that the Internal IP addresses of these two instances share the first three bytes in common. They reside on the same subnet in their Google Cloud VPC even though they are in different zones.
+
+To open a command prompt on the my-vm-2 instance, click SSH in its row in the VM instances list.
+Use the ping command to confirm that my-vm-2 can reach my-vm-1 over the network:
+ping my-vm-1
+Notice that the output of the ping command reveals that the complete hostname of my-vm-1 is my-vm-1.c.PROJECT_ID.internal, where PROJECT_ID is the name of your Google Cloud Platform project. GCP automatically supplies Domain Name Service (DNS) resolution for the internal IP addresses of VM instances.
+
+Press Ctrl+C to abort the ping command.
+Use the ssh command to open a command prompt on my-vm-1:
+ssh my-vm-1
+If you are prompted about whether you want to continue connecting to a host with unknown authenticity, enter Y to confirm that you do.
+
+At the command prompt on my-vm-1, install the Nginx web server:
+sudo apt-get install nginx-light -y
+Use the nano text editor to add a custom message to the home page of the web server:
+sudo nano /var/www/html/index.nginx-debian.html
+Use the arrow keys to move the cursor to the line just below the h1 header. Add text like this, and replace YOUR_NAME with your name:
+<p>Hi from YOUR_NAME</p>
+
+Press Ctrl+O and then press Enter to save your edited file, and then press Ctrl+X to exit the nano text editor.
+Confirm that the web server is serving your new page. At the command prompt on my-vm-1, execute this command:
+curl http://localhost/
+The response will be the HTML source of the web server's home page, including your line of custom text.
+
+To exit the command prompt on my-vm-1, execute this command:
+exit
+You will return to the command prompt on my-vm-2.
+
+To confirm that my-vm-2 can reach the web server on my-vm-1, at the command prompt on my-vm-2, execute this command:
+curl http://my-vm-1/
+The response will again be the HTML source of the web server's home page, including your line of custom text.
+
+On the Products & Services () menu, click Compute Engine > VM instances.
+Copy the External IP address for my-vm-1 and paste it into the address bar of a new browser tab. You will see your web server's home page, including your custom text.
+If you forgot to click Allow HTTP traffic when you created the my-vm-1 VM instance, your attempt to reach your web server's home page will fail. You can add a firewall rule to allow inbound traffic to your instances, although this topic is out of scope for this course.
